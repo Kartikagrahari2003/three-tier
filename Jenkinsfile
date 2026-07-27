@@ -42,7 +42,7 @@ pipeline {
             steps {
                 dir('frontend') {
                     sh '''
-                        aws s3 sync dist/ s3://$S3_BUCKET --delete --region $AWS_REGION
+                        aws s3 sync dist/ s3://$S3_BUCKET --delete --region ap-south-2
 
                         aws cloudfront create-invalidation \
                           --distribution-id $CLOUDFRONT_ID \
