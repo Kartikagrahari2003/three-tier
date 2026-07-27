@@ -1,5 +1,5 @@
 pipeline {
-    agent { lable 'electronix' }
+    agent { label 'electronix' }
 
     stages{
         stage("Provision node.js runtime"){
@@ -14,7 +14,7 @@ pipeline {
                 rm -f nodesource_setup.sh
                 fi
                 node -v
-                
+
                 '''
             }
         }
