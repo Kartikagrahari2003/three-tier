@@ -1,54 +1,65 @@
-pipeline{
-    agent { label 'electronix' }
-
-    environment{
-        S3_BUCKET='terraform-in-one-shot2003'
-        CLOUNTFRONT_ID='E20SUMGGWCRTRK'
-        AWS_REGION='ap-south-1'
+pipeline {
+    agent { 
+        label 'electronix' 
     }
 
-    stages{
-        stage("Frontend Deployment"){
-            when{
+    environment {
+        S3_BUCKET = 'terraform-in-one-shot2003'
+        CLOUDFRONT_ID = 'E20SUMGGWCRTRK'
+        AWS_REGION = 'ap-south-1'
+    }
+
+    stages {
+
+        stage('Frontend Deployment') {
+            when {
                 changeset "frontend/**"
             }
-        }
-        stage('Install Dependencies'){
-            steps{
-                dir('frontend')
-                sh '''
-                sh "npm install"
-                '''
-            }
-        }
-        stage("Run test"){
-            steps{
-                dir('frontend'){
-                    sh 'npm test -- --watchAll=false || echo "No Test configured..."'
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
                 }
             }
         }
-        stage('Build'){
-            steps('frontend'){
-                sh 'npm run build'
+
+        stage('Run Test') {
+            steps {
+                dir('frontend') {
+                    sh 'npm test -- --watchAll=false || echo "No tests configured..."'
+                }
             }
         }
-        stage('Deploy S3'){
-            steps{
-                dir('frontend'){
+
+        stage('Build') {
+            steps {
+                dir('frontend') {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Deploy to S3') {
+            steps {
+                dir('frontend') {
                     sh '''
-                    aws cloudfront create-invalidation --distribution-id $(CLOUDFRONT_ID) --path "/*"
+                        aws s3 sync dist/ s3://$S3_BUCKET --delete --region $AWS_REGION
+
+                        aws cloudfront create-invalidation \
+                          --distribution-id $CLOUDFRONT_ID \
+                          --paths "/*"
                     '''
                 }
             }
         }
     }
-    post{
-        sucess{
-            'Frontend deployment sucessful'
+
+    post {
+        success {
+            echo 'Frontend deployment successful'
         }
-        failure{
-            'Frontend deployment fail'
+
+        failure {
+            echo 'Frontend deployment failed'
         }
     }
 }
